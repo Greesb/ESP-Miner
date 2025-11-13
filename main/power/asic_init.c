@@ -7,6 +7,7 @@
 #include "asic_common.h"
 #include "serial.h"
 #include "asic_reset.h"
+#include "frequency_transition_bmXX.h"
 
 static const char *TAG = "asic_init";
 
@@ -47,6 +48,7 @@ uint8_t asic_initialize(GlobalState *GLOBAL_STATE, asic_init_mode_t mode, uint32
     ESP_LOGI(TAG, "Detecting ASIC chips...");
     clear_asic_chain_error();
     uint8_t chip_count = ASIC_init(GLOBAL_STATE);
+    ESP_LOGI(TAG, "Detected %d ASIC chip(s)", chip_count);
     
     if (chip_count == 0) {
         const char *chain_error = get_asic_chain_error();
