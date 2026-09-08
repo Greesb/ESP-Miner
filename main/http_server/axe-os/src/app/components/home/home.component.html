@@ -547,7 +547,7 @@
                 <tooltip-text-icon text="Value" tooltip="Total value of transaction outputs in BTC. For non-bitcoin chains, disable 'Decode Coinbase Tx' in Advanced Pool Options." />
               </div>
               @if (info.coinbaseValueTotalSatoshis && info.coinbaseValueTotalSatoshis > 0) {
-                {{ info.coinbaseValueTotalSatoshis | sats }}
+                {{ info.coinbaseValueTotalSatoshis | sats:currencyTicker:currencyDecimalPlaces:currencyDivider }}
               }
             </div>
             <div class="flex flex-nowrap items-baseline">
@@ -563,7 +563,7 @@
                       } @else {
                         <span class="font-mono text-sm" appTooltip="{{ output.address }}" tooltipPosition="top">{{ output.address | address }}</span>
                       }
-                      <span class="text-sm">{{ output.value | sats }}</span>
+                      <span class="text-sm">{{ output.value | sats:currencyTicker:currencyDecimalPlaces:currencyDivider }}</span>
                     } @else {
                       <span class="font-mono text-xs">{{ output.address }}</span>
                     }
@@ -576,7 +576,7 @@
               <div class="w-24 shrink-0 text-secondary">
                 Amount
               </div>
-              {{ info.coinbaseValueTotalSatoshis / 100_000_000 }}
+              {{ info.coinbaseValueTotalSatoshis / currencyDivider }}
             </div>
           }
         </div>

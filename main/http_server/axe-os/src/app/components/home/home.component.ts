@@ -184,8 +184,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   public efficiency: number = 0;
   public efficiencyAverage: number = 0;
   public expectedEfficiency: number = 0;
+  public activePoolUserPrefixPart: string = '';
   public activePoolUserAddressPart: string = '';
   public activePoolUserSuffixPart: string = '';
+  public currencyDecimalPlaces: number = 8;
+  public currencyDivider: number = 100_000_000;
+  public currencyTicker: string = 'BTC';
   public sortedRejectionReasons: Array<{ message: string; count: number; percentage: number }> = [];
   public networkDifficultyPercentage: string = '0';
   public payoutPercentage: number = -1;
@@ -274,7 +278,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     let dataSources = this.storageService.getItem(HOME_CHART_DATA_SOURCES);
     let parsedConfig: any = { chartY1Unit: 'hashrate', chartY2Unit: 'temperature' };
-    
+
     if (dataSources !== null) {
       try {
         const stored = JSON.parse(dataSources);
@@ -440,7 +444,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     const chartDef = WIDGET_DEFAULTS.find(d => d.id === 'chart');
     if (!chartDef) return WIDGET_DEFAULTS;
 
-    // The old layout set the chart height to 40vh. In gridstack, you need to set the height of 
+    // The old layout set the chart height to 40vh. In gridstack, you need to set the height of
     // the card, so there's 100px to compensate for the dropdowns and padding.
     const CHART_CHROME_PX = 100;
     const targetPx = (window.innerHeight * 0.40) + CHART_CHROME_PX;
@@ -532,8 +536,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     return labels.filter(label => this.isSensorSupported(label, this.latestInfo)).map((labelKey, index) => {
       const label = chartLabelValue(labelKey) || labelKey;
-      const borderColor = index === 0 
-        ? baseColor 
+      const borderColor = index === 0
+        ? baseColor
         : `color-mix(in srgb, ${baseColor} ${100 - index * 15}%, ${mixColor} ${index * 15}%)`;
       const backgroundColor = `color-mix(in srgb, ${borderColor}, transparent 81%)`;
 
@@ -708,7 +712,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
             const ticks = [];
             const start = new Date(axis.min);
-            
+
             // Align start to the unit boundary (human readable)
             start.setMilliseconds(0);
             if (this.currentInterval.unit === 'second') {
@@ -975,6 +979,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         }
         this.responseTime = info.responseTime;
 
+        this.activePoolUserPrefixPart = this.getHumanReadablePart(this.activePoolUser);
         this.activePoolUserAddressPart = this.getAddressPart(this.activePoolUser);
         this.activePoolUserSuffixPart = this.getSuffixPart(this.activePoolUser);
 
@@ -1379,13 +1384,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     while (this.dataLabel.length > limit) {
       // Option B: Chart is crowded. Binary search for the densest region.
-      // We initialize search range from index 1 to length - 2 to protect the oldest point (index 0) 
+      // We initialize search range from index 1 to length - 2 to protect the oldest point (index 0)
       // and newest point (index length - 1) from being deleted, preserving chart boundaries.
       let low = 1;
       let high = this.dataLabel.length - 2;
       while (high - low > 1) {
         const midTime = (this.dataLabel[low] + this.dataLabel[high]) / 2;
-        
+
         let split = low;
         for (let i = low; i <= high; i++) {
           if (this.dataLabel[i] >= midTime) {
@@ -1407,7 +1412,7 @@ export class HomeComponent implements OnInit, OnDestroy {
            low = split;
         }
       }
-      
+
       // Remove point at index 'low'.
       this.dataLabel.splice(low, 1);
       this.hashrateData.splice(low, 1);
@@ -1428,9 +1433,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     const totalSpanMs = this.dataLabel[this.dataLabel.length - 1] - this.dataLabel[0];
     const maxTicks = Math.min(16, Math.max(3, Math.floor(this.chartWidth / 80)));
 
-    this.currentInterval = HomeComponent.ADAPTIVE_TICK_INTERVALS.find(i => totalSpanMs / i.ms < maxTicks + 1) || 
+    this.currentInterval = HomeComponent.ADAPTIVE_TICK_INTERVALS.find(i => totalSpanMs / i.ms < maxTicks + 1) ||
                            HomeComponent.ADAPTIVE_TICK_INTERVALS[HomeComponent.ADAPTIVE_TICK_INTERVALS.length - 1];
-    
+
     const xAxis = (this.chartOptions.scales as any).x;
     if (xAxis.time.unit !== this.currentInterval.unit || xAxis.time.stepSize !== this.currentInterval.step) {
       xAxis.time.unit = this.currentInterval.unit;
@@ -1522,6 +1527,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         const settings = HomeComponent.getSettingsForLabel(datasetLabel);
         return value.toLocaleString(undefined, { useGrouping: false, maximumFractionDigits: args?.tickmark ? undefined : settings.precision }) + settings.suffix;
     }
+  }
+
+  getHumanReadablePart(user: string): string {
+    const colonIndex = user.indexOf(':');
+    return colonIndex !== -1 ? user.substring(0, colonIndex) : '';
   }
 
   getAddressPart(user: string): string {
