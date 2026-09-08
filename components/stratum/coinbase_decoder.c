@@ -1,3 +1,4 @@
+#include "ecash.h"
 #include "coinbase_decoder.h"
 #include "stratum_api.h"
 #include "utils.h"
@@ -79,6 +80,9 @@ void coinbase_decode_address_from_scriptpubkey(const uint8_t *script, size_t scr
     // P2PKH: OP_DUP OP_HASH160 <20 bytes> OP_EQUALVERIFY OP_CHECKSIG
     if (script_len == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && 
         script[2] == OP_PUSHDATA_20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
+        if (ecash_check_encode(script, script_len, P2PKH, output, output_len, bech32_hrp)) {
+            return;
+        }
         size_t b58sz = output_len;
         if (b58check_enc(output, &b58sz, p2pkh_version, script + 3, 20)) {
             return;
@@ -91,6 +95,9 @@ void coinbase_decode_address_from_scriptpubkey(const uint8_t *script, size_t scr
     
     // P2SH: OP_HASH160 <20 bytes> OP_EQUAL
     if (script_len == 23 && script[0] == OP_HASH160 && script[1] == OP_PUSHDATA_20 && script[22] == OP_EQUAL) {
+        if (ecash_check_encode(script, script_len, P2SH, output, output_len, bech32_hrp)) {
+            return;
+        }
         size_t b58sz = output_len;
         if (b58check_enc(output, &b58sz, p2sh_version, script + 2, 20)) {
             return;
@@ -133,6 +140,7 @@ void coinbase_decode_address_from_scriptpubkey(const uint8_t *script, size_t scr
         bin2hex(script + 2, 32, output + 5, output_len - 5);
         return;
     }
+    
 
     // OP_RETURN: OP_RETURN <data>
     if (script_len > 0 && script[0] == OP_RETURN) {
@@ -288,6 +296,8 @@ esp_err_t coinbase_process_miner_job(const miner_job_t *job,
         } else if (user_address[0] == 'm' || user_address[0] == 'n' || user_address[0] == '2') {
             bech32_hrp = "tb";
             is_testnet = true;
+        } else if (strncmp(user_address, "ecash:", 6) == 0) {
+            bech32_hrp = "ecash";
         }
     }
 

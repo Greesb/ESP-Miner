@@ -6,6 +6,8 @@ SRCS
     "stratum_socket.c"
     "coinbase_decoder.c"
     "segwit_addr.c"
+    "ecash.c"
+    "cashaddr.c"
     "base58.c"
     "miner_job.c"
 
