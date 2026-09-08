@@ -980,6 +980,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.responseTime = info.responseTime;
 
         this.activePoolUserPrefixPart = this.getHumanReadablePart(this.activePoolUser);
+        if (this.activePoolUserPrefixPart === 'ecash') {
+          this.currencyDecimalPlaces = 2;
+          this.currencyDivider = 100;
+          this.currencyTicker = 'XEC';
+        }
         this.activePoolUserAddressPart = this.getAddressPart(this.activePoolUser);
         this.activePoolUserSuffixPart = this.getSuffixPart(this.activePoolUser);
 
